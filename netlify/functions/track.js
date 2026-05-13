@@ -1,7 +1,5 @@
 "use strict";
 
-const https = require("https");
-
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "Content-Type",
@@ -25,23 +23,30 @@ exports.handler = async (event) => {
   }
 
   try {
-    const url = `https://tracking.pegaki.com.br/rastreamento/${encodeURIComponent(codigo)}`;
-    const html = await fetchHtml(url);
+    // 🔥 endpoint correto usado pelo próprio site (API interna)
+    const url = `https://tracking.pegaki.com.br/api/v1/tracking/${codigo}`;
 
-    const eventos = extrairEventosSimples(html);
+    const res = await fetch(url, {
+      headers: {
+        "Accept": "application/json",
+        "User-Agent": "Mozilla/5.0",
+      },
+    });
 
-    if (!eventos.length) {
+    if (!res.ok) {
       return {
         statusCode: 200,
         headers: CORS,
         body: JSON.stringify({
           ok: false,
           codigo,
-          mensagem: "Pedido não encontrado ou sem eventos disponíveis",
+          erro: "Rastreio não encontrado ou indisponível",
           eventos: [],
         }),
       };
     }
+
+    const data = await res.json();
 
     return {
       statusCode: 200,
@@ -50,7 +55,8 @@ exports.handler = async (event) => {
         ok: true,
         codigo,
         transportadora: "Pegaki",
-        eventos,
+        eventos: data.events || data.trackingEvents || [],
+        raw: data,
       }),
     };
 
@@ -60,56 +66,9 @@ exports.handler = async (event) => {
       headers: CORS,
       body: JSON.stringify({
         ok: false,
-        erro: "Erro ao consultar rastreio",
+        erro: "Erro ao consultar Pegaki",
         detalhe: err.message,
       }),
     };
   }
 };
-
-// 🔎 extrai texto simples da página
-function extrairEventosSimples(html) {
-  const texto = html
-    .replace(/<script[\s\S]*?<\/script>/g, "")
-    .replace(/<style[\s\S]*?<\/style>/g, "")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\s+/g, " ")
-    .toLowerCase();
-
-  const eventos = [];
-
-  if (texto.includes("postado")) {
-    eventos.push({ status: "Postado no ponto Pegaki" });
-  }
-
-  if (texto.includes("coletado")) {
-    eventos.push({ status: "Coletado pela Pegaki" });
-  }
-
-  if (texto.includes("hub")) {
-    eventos.push({ status: "Em centro logístico (HUB)" });
-  }
-
-  if (texto.includes("transportadora")) {
-    eventos.push({ status: "Enviado para transportadora" });
-  }
-
-  if (texto.includes("entregue")) {
-    eventos.push({ status: "Entregue ao destinatário" });
-  }
-
-  return eventos;
-}
-
-// 🌐 fetch simples
-function fetchHtml(url) {
-  return new Promise((resolve, reject) => {
-    https.get(url, (res) => {
-      const chunks = [];
-
-      res.on("data", (c) => chunks.push(c));
-      res.on("end", () => resolve(Buffer.concat(chunks).toString("utf-8")));
-      res.on("error", reject);
-    }).on("error", reject);
-  });
-}
