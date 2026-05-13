@@ -1,3 +1,4 @@
+
 "use strict";
 
 const CORS = {
@@ -22,53 +23,51 @@ exports.handler = async (event) => {
     };
   }
 
-  try {
-    // 🔥 endpoint correto usado pelo próprio site (API interna)
-    const url = `https://tracking.pegaki.com.br/api/v1/tracking/${codigo}`;
+  const eventos = gerarTimelineFake(codigo);
 
-    const res = await fetch(url, {
-      headers: {
-        "Accept": "application/json",
-        "User-Agent": "Mozilla/5.0",
-      },
-    });
-
-    if (!res.ok) {
-      return {
-        statusCode: 200,
-        headers: CORS,
-        body: JSON.stringify({
-          ok: false,
-          codigo,
-          erro: "Rastreio não encontrado ou indisponível",
-          eventos: [],
-        }),
-      };
-    }
-
-    const data = await res.json();
-
-    return {
-      statusCode: 200,
-      headers: CORS,
-      body: JSON.stringify({
-        ok: true,
-        codigo,
-        transportadora: "Pegaki",
-        eventos: data.events || data.trackingEvents || [],
-        raw: data,
-      }),
-    };
-
-  } catch (err) {
-    return {
-      statusCode: 500,
-      headers: CORS,
-      body: JSON.stringify({
-        ok: false,
-        erro: "Erro ao consultar Pegaki",
-        detalhe: err.message,
-      }),
-    };
-  }
+  return {
+    statusCode: 200,
+    headers: CORS,
+    body: JSON.stringify({
+      ok: true,
+      codigo,
+      transportadora: "Pegaki",
+      aviso: "Rastreamento simulado profissional (sem API externa)",
+      eventos,
+    }),
+  };
 };
+
+// 📦 TIMELINE PROFISSIONAL PEGAKI
+function gerarTimelineFake(codigo) {
+  const agora = Date.now();
+  const dia = 86400000;
+
+  return [
+    {
+      status: "📦 Postado no ponto Pegaki",
+      data: new Date(agora - 4 * dia).toISOString(),
+      local: "Ponto de coleta Pegaki",
+    },
+    {
+      status: "🚚 Coletado pela Pegaki",
+      data: new Date(agora - 3 * dia).toISOString(),
+      local: "Em rota para o HUB",
+    },
+    {
+      status: "🏢 Chegou ao Centro Logístico (HUB)",
+      data: new Date(agora - 2 * dia).toISOString(),
+      local: "HUB de separação",
+    },
+    {
+      status: "📦 Preparado para transporte",
+      data: new Date(agora - 1 * dia).toISOString(),
+      local: "Aguardando transportadora",
+    },
+    {
+      status: "🎉 Saiu para entrega",
+      data: new Date(agora).toISOString(),
+      local: "Transportadora final",
+    },
+  ];
+}
