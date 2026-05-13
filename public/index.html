@@ -1,0 +1,1003 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="theme-color" content="#331c72"/>
+<title>Rastreamento — Pegaki</title>
+<style>
+/* ══════════════════════════════════════════════════
+   TOKENS & RESET
+══════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  /* Cores oficiais Pegaki */
+  --navy:        #331c72;
+  --navy-dark:   #210f52;
+  --navy-mid:    #432490;
+  --lilac:       #b47cff;
+  --lilac-light: #d4a8ff;
+  --lilac-pale:  #f3eaff;
+  --lilac-soft:  #ede0ff;
+
+  /* Neutros */
+  --bg:          #f5f4fa;
+  --surface:     #ffffff;
+  --border:      #e8e4f3;
+  --border-soft: #f0ecf8;
+
+  /* Texto */
+  --text-1: #1a1033;
+  --text-2: #5a5073;
+  --text-3: #9b93b8;
+
+  /* Status */
+  --status-warn:    #f59e0b;
+  --status-warn-bg: #fffbeb;
+  --status-ok:      #10b981;
+  --status-ok-bg:   #ecfdf5;
+  --status-info:    #3b82f6;
+  --status-info-bg: #eff6ff;
+  --status-done:    #8b5cf6;
+  --status-done-bg: #f5f3ff;
+
+  /* Misc */
+  --radius-sm:  8px;
+  --radius-md:  14px;
+  --radius-lg:  20px;
+  --radius-xl:  26px;
+  --font:       -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", system-ui, sans-serif;
+  --ease:       cubic-bezier(0.4, 0, 0.2, 1);
+  --dur:        180ms;
+}
+
+html, body { height: 100%; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  padding: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ══════════════════════════════════════════════════
+   SHELL
+══════════════════════════════════════════════════ */
+.shell {
+  width: 100%;
+  max-width: 480px;
+  height: min(92dvh, 760px);
+  background: var(--surface);
+  border-radius: var(--radius-xl);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow:
+    0 0 0 1px rgba(51,28,114,0.08),
+    0 4px 6px rgba(51,28,114,0.04),
+    0 20px 48px rgba(51,28,114,0.12),
+    0 40px 80px rgba(51,28,114,0.06);
+}
+
+/* ══════════════════════════════════════════════════
+   HEADER
+══════════════════════════════════════════════════ */
+.header {
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy) 50%, var(--navy-mid) 100%);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: relative;
+  overflow: hidden;
+}
+.header::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -30px;
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(180,124,255,0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+.header::after {
+  content: '';
+  position: absolute;
+  bottom: -40px; left: 60px;
+  width: 100px; height: 100px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(180,124,255,0.10) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.header-avatar {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  background: rgba(180,124,255,0.20);
+  border: 1.5px solid rgba(180,124,255,0.35);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+  position: relative; z-index: 1;
+  backdrop-filter: blur(8px);
+}
+.header-info {
+  flex: 1;
+  position: relative; z-index: 1;
+}
+.header-name {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 650;
+  letter-spacing: -0.2px;
+}
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 3px;
+}
+.online-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #a7f3d0;
+  box-shadow: 0 0 0 2px rgba(167,243,208,0.3);
+  animation: pulse-green 2.5s ease-in-out infinite;
+}
+@keyframes pulse-green {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: .65; transform: scale(.85); }
+}
+.header-status-text {
+  color: rgba(255,255,255,0.72);
+  font-size: 12px;
+}
+.header-brand {
+  position: relative; z-index: 1;
+  font-size: 19px;
+  font-weight: 800;
+  font-style: italic;
+  letter-spacing: -0.5px;
+  background: linear-gradient(135deg, #fff 0%, var(--lilac-light) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ══════════════════════════════════════════════════
+   MESSAGES
+══════════════════════════════════════════════════ */
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--bg);
+  scroll-behavior: smooth;
+  overscroll-behavior: contain;
+}
+.messages::-webkit-scrollbar { width: 3px; }
+.messages::-webkit-scrollbar-track { background: transparent; }
+.messages::-webkit-scrollbar-thumb {
+  background: var(--lilac-soft);
+  border-radius: 99px;
+}
+
+/* ── MSG ROW ── */
+.msg {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 86%;
+  animation: slide-up .22s var(--ease) both;
+}
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.msg.bot  { align-self: flex-start; }
+.msg.user { align-self: flex-end; }
+
+/* ── BUBBLE ── */
+.bubble {
+  padding: 11px 15px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  line-height: 1.62;
+  position: relative;
+}
+.msg.bot .bubble {
+  background: var(--surface);
+  color: var(--text-1);
+  border: 1px solid var(--border);
+  border-bottom-left-radius: 4px;
+  box-shadow: 0 1px 3px rgba(51,28,114,0.05), 0 4px 12px rgba(51,28,114,0.04);
+}
+.msg.user .bubble {
+  background: linear-gradient(135deg, var(--navy-mid), var(--navy-dark));
+  color: #fff;
+  border-bottom-right-radius: 4px;
+  box-shadow: 0 2px 8px rgba(51,28,114,0.28), 0 8px 24px rgba(51,28,114,0.14);
+}
+.msg-time {
+  font-size: 11px;
+  color: var(--text-3);
+  padding: 0 4px;
+}
+.msg.user .msg-time { text-align: right; }
+
+/* ── TYPING ── */
+.typing-row { align-self: flex-start; animation: slide-up .2s var(--ease) both; }
+.typing-bubble {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  border-bottom-left-radius: 4px;
+  padding: 13px 17px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  box-shadow: 0 1px 3px rgba(51,28,114,0.05);
+}
+.typing-bubble span {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--lilac);
+  animation: typing .9s ease-in-out infinite;
+}
+.typing-bubble span:nth-child(2) { animation-delay: .15s; }
+.typing-bubble span:nth-child(3) { animation-delay: .30s; }
+@keyframes typing {
+  0%, 60%, 100% { transform: translateY(0); opacity: .6; }
+  30%            { transform: translateY(-6px); opacity: 1; }
+}
+
+/* ══════════════════════════════════════════════════
+   TIMELINE CARD
+══════════════════════════════════════════════════ */
+.tl-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  margin-top: 6px;
+  max-width: 340px;
+  width: 100%;
+  box-shadow: 0 1px 3px rgba(51,28,114,0.06), 0 4px 16px rgba(51,28,114,0.06);
+}
+
+/* Header do card */
+.tl-card-header {
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--border-soft);
+}
+.tl-card-header-icon { font-size: 18px; flex-shrink: 0; }
+.tl-card-header-info { flex: 1; }
+.tl-card-header-label { font-size: 13px; font-weight: 650; line-height: 1.3; }
+.tl-card-header-sub   { font-size: 11px; margin-top: 2px; opacity: .75; }
+
+/* Variações de cor do header */
+.tl-hd-postado       { background: var(--status-warn-bg); color: #92400e; }
+.tl-hd-coletado      { background: var(--status-done-bg); color: #4c1d95; }
+.tl-hd-hub           { background: var(--status-info-bg); color: #1e3a8a; }
+.tl-hd-transportadora{ background: var(--status-ok-bg);   color: #064e3b; }
+.tl-hd-transito      { background: var(--status-info-bg); color: #1e40af; }
+.tl-hd-entrega       { background: #fff7ed; color: #9a3412; }
+.tl-hd-entregue      { background: var(--status-ok-bg);   color: #14532d; }
+.tl-hd-default       { background: var(--lilac-pale);     color: var(--navy); }
+
+/* Body da timeline */
+.tl-body { padding: 14px 16px; }
+.tl-step { display: flex; gap: 0; }
+.tl-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 22px;
+  margin-right: 12px;
+  flex-shrink: 0;
+}
+
+/* Dot */
+.tl-dot {
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 2px;
+  z-index: 1;
+  transition: transform .2s var(--ease);
+}
+.tl-dot.done    { background: var(--lilac); border: 2px solid var(--lilac); }
+.tl-dot.current {
+  background: var(--surface);
+  border: 3px solid var(--navy);
+  box-shadow: 0 0 0 4px rgba(51,28,114,0.15), 0 0 12px rgba(180,124,255,0.3);
+  animation: dot-pulse 2.2s ease-in-out infinite;
+}
+@keyframes dot-pulse {
+  0%, 100% { box-shadow: 0 0 0 3px rgba(51,28,114,0.15), 0 0 8px rgba(180,124,255,0.25); }
+  50%       { box-shadow: 0 0 0 6px rgba(51,28,114,0.08), 0 0 16px rgba(180,124,255,0.18); }
+}
+.tl-dot.pending { background: #e5e7eb; border: 2px solid #d1d5db; }
+
+/* Line */
+.tl-line {
+  width: 2px;
+  flex: 1;
+  min-height: 8px;
+  margin: 2px 0;
+  border-radius: 1px;
+  transition: background .4s var(--ease);
+}
+.tl-line.done    { background: var(--lilac); }
+.tl-line.pending { background: #e5e7eb; }
+
+/* Content */
+.tl-content { padding-bottom: 14px; flex: 1; min-width: 0; }
+.tl-step:last-child .tl-content { padding-bottom: 0; }
+.tl-step-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-1);
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.tl-step-label.pending { color: var(--text-3); font-weight: 400; }
+.tl-step-date  { font-size: 11px; color: var(--text-2); margin-top: 2px; }
+.tl-step-local { font-size: 11px; color: var(--text-3); margin-top: 1px; }
+
+/* ══════════════════════════════════════════════════
+   ALERT & INFO CARDS
+══════════════════════════════════════════════════ */
+.card-alert {
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: var(--radius-md);
+  padding: 13px 15px;
+  margin-top: 6px;
+  font-size: 13px;
+  color: #7c2d12;
+  line-height: 1.65;
+  max-width: 340px;
+}
+.card-alert a { color: #ea580c; font-weight: 600; text-decoration: none; }
+.card-alert a:hover { text-decoration: underline; }
+
+.card-resp {
+  background: var(--lilac-pale);
+  border: 1px solid var(--lilac-soft);
+  border-radius: var(--radius-md);
+  padding: 13px 15px;
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--navy);
+  line-height: 1.65;
+  max-width: 340px;
+}
+.card-resp strong { color: var(--navy-mid); }
+.card-resp-list { margin: 8px 0 0 0; list-style: none; }
+.card-resp-list li {
+  padding: 2px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  color: var(--text-2);
+}
+.card-resp-list li::before { content: '•'; color: var(--lilac); flex-shrink: 0; }
+
+/* ══════════════════════════════════════════════════
+   CHIPS
+══════════════════════════════════════════════════ */
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
+}
+.chip {
+  background: var(--surface);
+  color: var(--navy);
+  border: 1.5px solid var(--border);
+  border-radius: 99px;
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 550;
+  cursor: pointer;
+  transition: all var(--dur) var(--ease);
+  white-space: nowrap;
+  user-select: none;
+}
+.chip:hover {
+  background: var(--lilac-pale);
+  border-color: var(--lilac);
+  color: var(--navy-mid);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(180,124,255,0.2);
+}
+.chip:active { transform: scale(.97); }
+
+/* ══════════════════════════════════════════════════
+   INPUT AREA
+══════════════════════════════════════════════════ */
+.footer {
+  flex-shrink: 0;
+  padding: 12px 16px 16px;
+  background: var(--surface);
+  border-top: 1px solid var(--border-soft);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.chat-input {
+  flex: 1;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 11px 18px;
+  font-size: 14px;
+  font-family: var(--font);
+  outline: none;
+  background: var(--bg);
+  color: var(--text-1);
+  transition: border-color var(--dur) var(--ease), box-shadow var(--dur) var(--ease), background var(--dur) var(--ease);
+}
+.chat-input:focus {
+  border-color: var(--lilac);
+  background: var(--surface);
+  box-shadow: 0 0 0 3px rgba(180,124,255,0.18);
+}
+.chat-input::placeholder { color: var(--text-3); }
+.chat-input:disabled { opacity: .45; cursor: not-allowed; }
+
+.send-btn {
+  width: 43px; height: 43px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, var(--navy-mid), var(--navy-dark));
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease), opacity var(--dur);
+  box-shadow: 0 2px 8px rgba(51,28,114,0.3), 0 6px 20px rgba(51,28,114,0.18);
+}
+.send-btn:hover   { transform: scale(1.06); box-shadow: 0 4px 14px rgba(51,28,114,0.38); }
+.send-btn:active  { transform: scale(.95); }
+.send-btn:disabled{ opacity: .35; cursor: default; transform: none; box-shadow: none; }
+.send-btn svg     { width: 17px; height: 17px; fill: #fff; }
+
+/* ══════════════════════════════════════════════════
+   MOBILE
+══════════════════════════════════════════════════ */
+@media (max-width: 520px) {
+  body { padding: 0; align-items: flex-end; background: var(--navy-dark); }
+  .shell {
+    border-radius: var(--radius-xl) var(--radius-xl) 0 0;
+    height: 100dvh;
+    max-height: none;
+  }
+  .footer { padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+}
+</style>
+</head>
+<body>
+
+<div class="shell" id="shell">
+  <!-- HEADER -->
+  <div class="header">
+    <div class="header-avatar">📦</div>
+    <div class="header-info">
+      <div class="header-name">Assistente Pegaki</div>
+      <div class="header-status">
+        <div class="online-dot"></div>
+        <span class="header-status-text">Online agora</span>
+      </div>
+    </div>
+    <div class="header-brand">pegaki</div>
+  </div>
+
+  <!-- MESSAGES -->
+  <div class="messages" id="msgs"></div>
+
+  <!-- INPUT -->
+  <div class="footer">
+    <input class="chat-input" id="inp" placeholder="Digite sua mensagem..." autocomplete="off" spellcheck="false"/>
+    <button class="send-btn" id="sendBtn" aria-label="Enviar">
+      <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+    </button>
+  </div>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════ */
+const $ = id => document.getElementById(id);
+const msgs    = $('msgs');
+const inp     = $('inp');
+const sendBtn = $('sendBtn');
+
+let estado      = 'pedir_nome';
+let nomeUsuario = '';
+
+// Estatísticas persistidas
+function getStats() {
+  try { return JSON.parse(localStorage.getItem('pgk_stats') || '{}'); }
+  catch (_) { return {}; }
+}
+function saveStats(s) {
+  try { localStorage.setItem('pgk_stats', JSON.stringify(s)); } catch (_) {}
+}
+function registrar(tipo, etapaId) {
+  const s    = getStats();
+  const hoje = new Date().toISOString().split('T')[0];
+  const hora = new Date().getHours();
+
+  s.total    = (s.total    || 0) + 1;
+  s.rastreios= tipo === 'rastreio' ? (s.rastreios || 0) + 1 : (s.rastreios || 0);
+  s.dias     = s.dias  || {};
+  s.horas    = s.horas || {};
+  s.status   = s.status|| {};
+
+  s.dias[hoje]     = (s.dias[hoje]     || 0) + 1;
+  s.horas[hora]    = (s.horas[hora]    || 0) + 1;
+  if (etapaId) s.status[etapaId] = (s.status[etapaId] || 0) + 1;
+
+  saveStats(s);
+}
+
+/* ══════════════════════════════════════════════════
+   DOM HELPERS
+══════════════════════════════════════════════════ */
+const agora = () => new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+const delay = ms => new Promise(r => setTimeout(r, ms));
+const nome  = () => `<strong>${nomeUsuario}</strong>`;
+
+function addMsg(html, quem, extra) {
+  const wrap = document.createElement('div');
+  wrap.className = `msg ${quem}`;
+  if (html) {
+    const b = document.createElement('div');
+    b.className = 'bubble';
+    b.innerHTML = html;
+    wrap.appendChild(b);
+  }
+  if (extra) wrap.appendChild(extra);
+  const t = document.createElement('div');
+  t.className = 'msg-time';
+  t.textContent = agora();
+  wrap.appendChild(t);
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+  return wrap;
+}
+
+function showTyping() {
+  const w = document.createElement('div');
+  w.className = 'typing-row'; w.id = 'typing';
+  const b = document.createElement('div');
+  b.className = 'typing-bubble';
+  b.innerHTML = '<span></span><span></span><span></span>';
+  w.appendChild(b);
+  msgs.appendChild(w);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function hideTyping() { $('typing')?.remove(); }
+
+async function botDiz(html, extra, ms = 780) {
+  showTyping();
+  await delay(ms);
+  hideTyping();
+  addMsg(html, 'bot', extra);
+}
+
+function appendChips(opcoes, targetWrap) {
+  const row = document.createElement('div');
+  row.className = 'chip-row';
+  opcoes.forEach(op => {
+    const c = document.createElement('div');
+    c.className = 'chip';
+    c.textContent = op.label;
+    c.onclick = () => { row.remove(); handleInput(op.value || op.label); };
+    row.appendChild(c);
+  });
+  // Adiciona no último bubble bot
+  const lastBubble = targetWrap?.querySelector?.('.bubble') || msgs.querySelector('.msg.bot:last-child .bubble');
+  if (lastBubble) lastBubble.appendChild(row);
+  else msgs.appendChild(row);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+/* ══════════════════════════════════════════════════
+   ETAPAS (mirror do backend)
+══════════════════════════════════════════════════ */
+const ETAPAS = [
+  { id:'postado',       label:'Postado no ponto Pegaki',       icone:'📦', cor:'postado',        resp:'pegaki' },
+  { id:'coletado',      label:'Coletado no ponto',             icone:'🚚', cor:'coletado',       resp:'pegaki' },
+  { id:'hub_entrada',   label:'Chegou ao HUB Pegaki',          icone:'🏢', cor:'hub',            resp:'pegaki' },
+  { id:'hub_unitizado', label:'Preparado no HUB',              icone:'✅', cor:'hub',            resp:'pegaki' },
+  { id:'saiu_hub',      label:'Saiu com a transportadora',     icone:'🎉', cor:'transportadora', resp:'transportadora' },
+  { id:'em_transito',   label:'Em trânsito',                   icone:'🛣️', cor:'transito',       resp:'transportadora' },
+  { id:'saiu_entrega',  label:'Saiu para entrega',             icone:'🏃', cor:'entrega',        resp:'transportadora' },
+  { id:'entregue',      label:'Entregue ao destinatário',      icone:'🎊', cor:'entregue',       resp:'transportadora' },
+];
+
+const COR_HEADER = {
+  postado:       'tl-hd-postado',
+  coletado:      'tl-hd-coletado',
+  hub:           'tl-hd-hub',
+  transportadora:'tl-hd-transportadora',
+  transito:      'tl-hd-transito',
+  entrega:       'tl-hd-entrega',
+  entregue:      'tl-hd-entregue',
+  default:       'tl-hd-default',
+};
+
+/* ══════════════════════════════════════════════════
+   TIMELINE
+══════════════════════════════════════════════════ */
+function criarTimeline(etapaAtualId, eventos) {
+  const idxAtual = ETAPAS.findIndex(e => e.id === etapaAtualId);
+  const etapaAtual = ETAPAS[Math.max(idxAtual, 0)];
+
+  // Mapa etapaId → evento
+  const mapa = {};
+  (eventos || []).forEach(ev => {
+    if (ev.etapaId && !mapa[ev.etapaId]) mapa[ev.etapaId] = ev;
+  });
+
+  const card = document.createElement('div');
+  card.className = 'tl-card';
+
+  // Header
+  const hdr = document.createElement('div');
+  const hdCor = COR_HEADER[etapaAtual.cor] || COR_HEADER.default;
+  hdr.className = `tl-card-header ${hdCor}`;
+  hdr.innerHTML = `
+    <span class="tl-card-header-icon">${etapaAtual.icone}</span>
+    <div class="tl-card-header-info">
+      <div class="tl-card-header-label">${etapaAtual.label}</div>
+      <div class="tl-card-header-sub">${etapaAtual.resp === 'pegaki' ? 'Operação Pegaki' : 'Com a transportadora'}</div>
+    </div>`;
+  card.appendChild(hdr);
+
+  // Body
+  const body = document.createElement('div');
+  body.className = 'tl-body';
+
+  ETAPAS.forEach((et, idx) => {
+    const step = document.createElement('div');
+    step.className = 'tl-step';
+
+    // Coluna esquerda
+    const left = document.createElement('div');
+    left.className = 'tl-left';
+    const dot = document.createElement('div');
+    dot.className = 'tl-dot ' + (idx < idxAtual ? 'done' : idx === idxAtual ? 'current' : 'pending');
+    left.appendChild(dot);
+    if (idx < ETAPAS.length - 1) {
+      const line = document.createElement('div');
+      line.className = 'tl-line ' + (idx < idxAtual ? 'done' : 'pending');
+      left.appendChild(line);
+    }
+
+    // Conteúdo
+    const content = document.createElement('div');
+    content.className = 'tl-content';
+    const lbl = document.createElement('div');
+    lbl.className = 'tl-step-label' + (idx > idxAtual ? ' pending' : '');
+    lbl.textContent = `${et.icone} ${et.label}`;
+    content.appendChild(lbl);
+
+    const ev = mapa[et.id];
+    if (ev?.data) {
+      const d = document.createElement('div');
+      d.className = 'tl-step-date';
+      d.textContent = ev.data;
+      content.appendChild(d);
+    }
+    if (ev?.local) {
+      const l = document.createElement('div');
+      l.className = 'tl-step-local';
+      l.textContent = ev.local;
+      content.appendChild(l);
+    }
+
+    step.appendChild(left);
+    step.appendChild(content);
+    body.appendChild(step);
+  });
+
+  card.appendChild(body);
+  return card;
+}
+
+/* ══════════════════════════════════════════════════
+   MENSAGENS HUMANIZADAS
+══════════════════════════════════════════════════ */
+function msgPorEtapa(etapaId, ev) {
+  const n = nome();
+  const dt = ev?.data  ? ` em <strong>${ev.data}</strong>`  : '';
+  const lc = ev?.local ? ` em <strong>${ev.local}</strong>` : '';
+  const tr = ev?.transportadora || '';
+
+  const msgs = {
+    postado: `
+      📦 <strong>POSTADO NO PONTO PEGAKI</strong><br><br>
+      Boa notícia, ${n}! Seu pacote foi recebido com sucesso em um ponto parceiro Pegaki${lc}${dt}.<br><br>
+      Agora ele aguarda a próxima coleta da nossa equipe para seguir ao <strong>centro logístico (HUB)</strong>.`,
+
+    coletado: `
+      🚚 <strong>COLETADO NO PONTO!</strong><br><br>
+      ${n}, seu pacote já foi coletado pela equipe Pegaki${dt} e está em deslocamento para o nosso centro logístico.<br><br>
+      💡 <em>O HUB é o centro logístico da Pegaki, onde os pacotes são triados, organizados e preparados para envio à transportadora.</em>`,
+
+    hub_entrada: `
+      🏢 <strong>CHEGOU AO HUB PEGAKI!</strong><br><br>
+      ${n}, seu pacote chegou ao nosso <strong>centro logístico</strong>${lc}${dt}.<br><br>
+      Ele está passando pela triagem e sendo preparado para envio à transportadora responsável pela entrega final.`,
+
+    hub_unitizado: `
+      ✅ <strong>PREPARADO NO HUB — TUDO CERTO!</strong><br><br>
+      ${n}, seu pacote foi <strong>unitizado</strong>${dt} — separado, conferido e preparado para despacho.<br><br>
+      💡 <em>Unitizado = pacote organizado, etiquetado e pronto para ser entregue à transportadora.</em><br><br>
+      Em breve ele seguirá com a transportadora responsável pela entrega final.`,
+
+    saiu_hub: `
+      🎉 <strong>OBAAA, ${n.toUpperCase().replace(/<[^>]+>/g,'')}! SEU PACOTE SAIU!</strong><br><br>
+      ${n}, seu pacote foi coletado pela transportadora${tr ? ` <strong>${tr}</strong>` : ''}${dt} e agora está a caminho do destinatário final. 🚛✨<br><br>
+      A partir desta etapa, o acompanhamento deve ser feito diretamente pela <strong>plataforma emissora da etiqueta</strong> ou pela transportadora responsável.<br><br>
+      A Pegaki atua como rede logística e pontos de coleta até a transferência para a transportadora final.`,
+
+    em_transito: `
+      🛣️ <strong>EM TRÂNSITO!</strong><br><br>
+      ${n}, seu pacote está em trânsito${lc ? ', passando por' + lc : ''}${dt}.<br><br>
+      A entrega está sendo conduzida pela transportadora responsável. Acompanhe pela plataforma emissora da etiqueta.`,
+
+    saiu_entrega: `
+      🏃 <strong>SAIU PARA ENTREGA!</strong><br><br>
+      ${n}, ótima notícia! Seu pacote saiu para entrega${dt} e o entregador já está a caminho.<br><br>
+      Fique de olho no endereço de entrega. 📍`,
+
+    entregue: `
+      🎊 <strong>ENTREGUE COM SUCESSO!</strong><br><br>
+      Parabéns, ${n}! Seu pacote foi entregue${dt} ao destinatário.<br><br>
+      Esperamos que tudo tenha chegado perfeito. Em caso de dúvidas sobre o produto, fale com o vendedor. 💜`,
+  };
+
+  return msgs[etapaId] || `${n}, encontrei informações sobre o seu pedido. Confira o histórico abaixo:`;
+}
+
+/* ══════════════════════════════════════════════════
+   CARDS EXTRAS
+══════════════════════════════════════════════════ */
+function cardAlerta(tipo, codigo) {
+  const c = document.createElement('div');
+  c.className = 'card-alert';
+  if (tipo === 'parado') {
+    c.innerHTML = `
+      ⚠️ <strong>Atenção, ${nomeUsuario}!</strong><br><br>
+      Seu pedido está como <em>postado</em> há mais de 2 dias sem movimentação. Isso pode indicar um atraso na coleta.<br><br>
+      Recomendamos abrir um chamado pelo e-mail <a href="mailto:ajuda@pegaki.com.br">ajuda@pegaki.com.br</a> informando o código <strong>${codigo}</strong>.`;
+  } else {
+    c.innerHTML = `
+      ❌ <strong>Pedido não encontrado</strong><br><br>
+      Não localizei o código <strong>${codigo}</strong> no sistema. Verifique se foi digitado corretamente.<br><br>
+      Precisa de ajuda? <a href="mailto:ajuda@pegaki.com.br">ajuda@pegaki.com.br</a>`;
+  }
+  return c;
+}
+
+function cardResponsabilidade(transportadora) {
+  const c = document.createElement('div');
+  c.className = 'card-resp';
+  c.innerHTML = `
+    <strong>📋 Sobre as responsabilidades</strong><br><br>
+    A <strong>Pegaki</strong> é responsável pelas etapas iniciais:
+    <ul class="card-resp-list">
+      <li>Recebimento no ponto parceiro</li>
+      <li>Coleta e transporte ao HUB</li>
+      <li>Triagem, organização e preparo para despacho</li>
+    </ul><br>
+    ${transportadora ? `Seu pacote está com a transportadora <strong>${transportadora}</strong>.<br><br>` : ''}
+    A partir da coleta pela transportadora, o acompanhamento passa a ser responsabilidade da <strong>transportadora</strong> ou da <strong>plataforma que emitiu a etiqueta</strong>.`;
+  return c;
+}
+
+/* ══════════════════════════════════════════════════
+   FLUXO PRINCIPAL
+══════════════════════════════════════════════════ */
+async function handleInput(texto) {
+  inp.disabled = true;
+  sendBtn.disabled = true;
+
+  // ── PEDE NOME ──────────────────────────────────
+  if (estado === 'pedir_nome') {
+    const partes = texto.trim().split(/\s+/);
+    nomeUsuario = partes[0].charAt(0).toUpperCase() + partes[0].slice(1).toLowerCase();
+    estado = 'pedir_codigo';
+    registrar('sessao', null);
+    await botDiz(
+      `Olá, <strong>${nomeUsuario}</strong>! 👋 Seja muito bem-vindo ao atendimento da <strong>Pegaki</strong>.<br><br>
+      Estou aqui para te ajudar a rastrear seu pedido e entender cada etapa do processo logístico.<br><br>
+      Pode me informar o <strong>código do pedido</strong> que você quer rastrear?`,
+      null, 1000
+    );
+
+  // ── PEDE CÓDIGO / NOVO RASTREIO ────────────────
+  } else if (estado === 'pedir_codigo' || estado === 'novo_codigo') {
+    const codigo = texto.replace(/\s+/g, '');
+
+    if (codigo.length < 5) {
+      await botDiz(`Hmm, ${nome()}, esse código parece incompleto. Pode verificar e digitar novamente? 🔍`, null, 500);
+      inp.disabled = false; sendBtn.disabled = false; inp.focus();
+      return;
+    }
+
+    estado = 'consultando';
+    await botDiz(`🔍 Consultando o pedido <strong>${codigo}</strong>...`, null, 650);
+
+    try {
+      const res   = await fetch(`/.netlify/functions/track?codigo=${encodeURIComponent(codigo)}`);
+      const dados = await res.json();
+
+      if (!dados.ok || !dados.encontrado) {
+        // Não encontrado
+        estado = 'novo_codigo';
+        addMsg(null, 'bot', cardAlerta('nao_encontrado', codigo));
+        await delay(350);
+        const w = await botDizRetorno(
+          `Gostaria de tentar outro código, ${nome()}? É só digitar aqui. 😊`,
+          null, 550
+        );
+        appendChips([
+          { label: '📦 Tentar outro código', value: '__prompt_codigo' },
+          { label: '📧 Falar com suporte',   value: '__suporte' },
+        ], w);
+
+      } else {
+        const etapaId = dados.etapaAtual?.id || null;
+        registrar('rastreio', etapaId);
+
+        const primEv   = dados.eventos?.[0] || null;
+        const timeline = criarTimeline(etapaId || 'postado', dados.eventos);
+        const msgTxt   = msgPorEtapa(etapaId, primEv);
+
+        await botDiz(msgTxt, timeline);
+
+        // Pacote parado
+        if (dados.parado) {
+          await delay(400);
+          addMsg(null, 'bot', cardAlerta('parado', codigo));
+        }
+
+        // Com transportadora
+        if (dados.etapaAtual?.resp === 'transportadora') {
+          await delay(500);
+          addMsg(null, 'bot', cardResponsabilidade(primEv?.transportadora));
+        }
+
+        estado = 'novo_codigo';
+        await delay(750);
+        const w = addMsg(
+          `Posso ajudar com mais alguma coisa, ${nome()}? 😊`,
+          'bot'
+        );
+        appendChips([
+          { label: '📦 Rastrear outro pedido',   value: '__prompt_codigo'  },
+          { label: '🏢 O que é o HUB?',          value: '__hub'            },
+          { label: '🚛 Transportadora responsável', value: '__transportadora' },
+          { label: '📧 Falar com suporte',        value: '__suporte'        },
+        ], w);
+      }
+
+    } catch(err) {
+      estado = 'novo_codigo';
+      await botDiz(
+        `Ops, tive um problema de conexão, ${nome()}. Tente novamente ou entre em contato: <a href="mailto:ajuda@pegaki.com.br" style="color:var(--lilac);font-weight:600">ajuda@pegaki.com.br</a>`,
+        null, 500
+      );
+    }
+
+  // ── CONVERSA LIVRE ─────────────────────────────
+  } else if (estado === 'novo_codigo') {
+    const t = texto.toLowerCase();
+
+    if (texto === '__prompt_codigo' || /rastrear|outro|novo|código|pedido/.test(t)) {
+      estado = 'pedir_codigo';
+      await botDiz(`Claro! Me informe o <strong>código do pedido</strong> que você quer rastrear. 📦`, null, 450);
+
+    } else if (texto === '__hub' || /hub|centro log|centro logístico/.test(t)) {
+      await botDiz(`
+        🏢 <strong>O que é o HUB Pegaki?</strong><br><br>
+        O HUB é o nosso <strong>Centro Logístico</strong> — o coração da operação Pegaki.<br><br>
+        É lá que os pacotes chegam depois de coletados nos pontos parceiros, e de onde seguem para as transportadoras finais.<br><br>
+        No HUB realizamos:<br>
+        • Recebimento e conferência dos pacotes<br>
+        • Triagem e organização por destino<br>
+        • Unitização (preparação para despacho)<br>
+        • Entrega à transportadora responsável pela rota`, null, 850);
+
+    } else if (texto === '__transportadora' || /transportadora|quem entrega|quem faz a entrega/.test(t)) {
+      await botDiz(`
+        🚚 <strong>Transportadora responsável</strong><br><br>
+        A <strong>Pegaki</strong> é uma rede logística de pontos de coleta. Cuidamos do seu pacote desde o recebimento no ponto até a entrega à transportadora final.<br><br>
+        A transportadora responsável pela <strong>entrega ao destinatário</strong> é definida pela plataforma que emitiu a etiqueta.<br><br>
+        Para saber qual é a transportadora e rastrear a entrega final, acesse a plataforma que você usou para enviar o pedido.`, null, 850);
+
+    } else if (texto === '__suporte' || /suporte|ajuda|contato|problema|reclamar/.test(t)) {
+      await botDiz(`
+        📧 <strong>Atendimento Pegaki</strong><br><br>
+        Para falar com nossa equipe:<br><br>
+        ✉️ <a href="mailto:ajuda@pegaki.com.br" style="color:var(--lilac);font-weight:600">ajuda@pegaki.com.br</a><br><br>
+        Informe o <strong>código do pedido</strong> e descreva sua situação para um atendimento mais ágil.`, null, 650);
+
+    } else if (texto.replace(/\s+/g,'').length > 5) {
+      // Assume que é código novo
+      estado = 'pedir_codigo';
+      await handleInput(texto);
+      return;
+
+    } else {
+      await botDiz(`${nome()}, para rastrear um pedido é só me informar o código! 📦`, null, 450);
+    }
+  }
+
+  inp.disabled = false;
+  sendBtn.disabled = false;
+  inp.focus();
+}
+
+// Helper: botDiz retornando o wrapper
+async function botDizRetorno(html, extra, ms = 780) {
+  showTyping();
+  await delay(ms);
+  hideTyping();
+  return addMsg(html, 'bot', extra);
+}
+
+/* ══════════════════════════════════════════════════
+   EVENTOS DE INPUT
+══════════════════════════════════════════════════ */
+async function enviar() {
+  const t = inp.value.trim();
+  if (!t || inp.disabled) return;
+  inp.value = '';
+  addMsg(t, 'user');
+  await handleInput(t);
+}
+
+sendBtn.addEventListener('click', enviar);
+inp.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) enviar(); });
+
+/* ══════════════════════════════════════════════════
+   INIT
+══════════════════════════════════════════════════ */
+(async function init() {
+  inp.disabled = true; sendBtn.disabled = true;
+  showTyping();
+  await delay(1200);
+  hideTyping();
+  addMsg(
+    `👋 Olá! Sou o <strong>assistente virtual da Pegaki</strong>.<br><br>
+    Posso te ajudar a rastrear seu pedido e entender cada etapa do processo de envio — de forma simples e clara.<br><br>
+    Para começar, qual é o seu <strong>nome</strong>?`,
+    'bot'
+  );
+  inp.disabled = false; sendBtn.disabled = false;
+  inp.focus();
+})();
+</script>
+</body>
+</html>
